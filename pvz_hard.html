@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Plants vs Zombies - Hard Mode</title>
+  <style>
+    body { margin:0; background:#2e7d32; font-family:sans-serif; color:white; user-select:none; }
+    #hud { background:rgba(0,0,0,0.5); padding:10px; font-size:20px; }
+    #panel { display:flex; gap:10px; padding:10px; background:rgba(0,0,0,0.3); flex-wrap:wrap; }
+    .plantBtn { padding:6px 10px; border:2px solid white; border-radius:8px; cursor:pointer; background:#1b5e20; color:white; font-size:18px; }
+    .plantBtn.selected { background:#81c784; color:black; }
+    #game {
+      position:relative; width:100vw; height:70vh;
+      background:#33691e; display:grid;
+      grid-template-rows:repeat(5,1fr); grid-template-columns:repeat(9,1fr);
+      border:4px solid #1b5e20;
+    }
+    .cell { border:1px solid rgba(255,255,255,0.2); position:relative; }
+    .plant { width:100%; height:100%; display:flex; justify-content:center; align-items:center; font-size:24px; }
+    .zombie { position:absolute; width:60px; height:80px; background:brown; color:white; text-align:center; line-height:80px; border-radius:10px; font-size:22px; }
+    .boss { width:120px; height:140px; background:darkred; font-size:32px; line-height:140px; }
+    .pea { position:absolute; width:15px; height:15px; border-radius:50%; }
+    .pea.normal { background:yellow; } .pea.ice { background:cyan; } .pea.fire { background:red; }
+    #message { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.7); font-size:48px; font-weight:bold; }
+    #message.hidden { display:none; }
+  </style>
+</head>
+<body>
+  <div id="hud">☀️ Slunce: <span id="sun">75</span></div>
+  <div id="panel">
+    <div class="plantBtn" data-type="pea" data-cost="50">🌱 50</div>
+    <div class="plantBtn" data-type="double" data-cost="100">🌼 100</div>
+    <div class="plantBtn" data-type="sunflower" data-cost="50">🌻 50</div>
+    <div class="plantBtn" data-type="ice" data-cost="125">🌵 125</div>
+    <div class="plantBtn" data-type="fire" data-cost="150">🌶️ 150</div>
+    <div class="plantBtn" data-type="bomb" data-cost="200">💣 200</div>
+  </div>
+  <div id="game"></div>
+  <div id="message" class="hidden"></div>
+  <script>
+    const game=document.getElementById("game");
+    const sunCounter=document.getElementById("sun");
+    const msg=document.getElementById("message");
+    let sun=75; let cells=[],plants=[],zombies=[],peas=[];
+    const rows=5,cols=9; let wave=0,maxWaves=4; let bossSpawned=false; let selectedPlant=null;
+
+    document.querySelectorAll(".plantBtn").forEach(btn=>{
+      btn.addEventListener("click",()=>{ document.querySelectorAll(".plantBtn").forEach(b=>b.classList.remove("selected"));
+        btn.classList.add("selected"); selectedPlant={ type:btn.dataset.type, cost:+btn.dataset.cost }; });
+    });
+
+    for(let r=0;r<rows;r++){ cells[r]=[]; for(let c=0;c<cols;c++){ const cell=document.createElement("div");
+      cell.className="cell"; game.appendChild(cell); cells[r][c]=cell;
+      cell.addEventListener("click",()=>{ if(cell.hasPlant||!selectedPlant||sun<selectedPlant.cost) return;
+        addPlant(r,c,selectedPlant.type,selectedPlant.cost); }); } }
+
+    function addPlant(r,c,type,cost){ sun-=cost; sunCounter.textContent=sun;
+      const plant=document.createElement("div"); plant.className="plant"; plant.textContent=({pea:"🌱",double:"🌼",sunflower:"🌻",ice:"🌵",fire:"🌶️",bomb:"💣"})[type];
+      cells[r][c].appendChild(plant); cells[r][c].hasPlant=true; plants.push({r,c,el:plant,type,cooldown:0});
+      if(type==="bomb") setTimeout(()=>explode(r,c),1000);
+    }
+
+    function explode(r,c){ plants=plants.filter(p=>!(p.r===r&&p.c===c)); cells[r][c].hasPlant=false; cells[r][c].innerHTML="";
+      zombies.forEach(z=>{ if(Math.abs(z.r-r)<=1 && z.x>c*100 && z.x<(c+2)*100){ if(z.isBoss) z.hp-=10; else z.hp=0; }});
+    }
+
+    function spawnWave(){ if(wave>=maxWaves){ if(!bossSpawned){ spawnBoss(); bossSpawned=true; } return; }
+      wave++; for(let i=0;i<wave+4;i++) setTimeout(()=>spawnZombie(),i*1500); }
+
+    function spawnZombie(){ const r=Math.floor(Math.random()*rows);
+      const z=document.createElement("div"); z.className="zombie";
+      z.style.top=`${r*(game.clientHeight/rows)+10}px`; z.style.left=`${game.clientWidth-60}px`;
+      let t=Math.random(), hp=6, speed=0.7, emoji="🧟"; if(t<0.2){hp=4;speed=1.5;emoji="🏃";} else if(t>0.8){hp=12;speed=0.4;emoji="🪖";}
+      z.textContent=emoji; game.appendChild(z); zombies.push({r,x:game.clientWidth-60,el:z,hp,speed,slow:1});
+    }
+
+    function spawnBoss(){ const r=2; const b=document.createElement("div"); b.className="zombie boss";
+      b.style.top=`${r*(game.clientHeight/rows)}px`; b.style.left=`${game.clientWidth-140}px`; b.textContent="👑";
+      game.appendChild(b); const boss={r,x:game.clientWidth-140,el:b,hp:300,speed:0.25,slow:1,isBoss:true}; zombies.push(boss);
+      setInterval(()=>{ if(zombies.includes(boss)) spawnZombie(); },3000);
+    }
+
+    function loop(){
+      plants.forEach(p=>{ p.cooldown--;
+        if(p.type==="sunflower"&&p.cooldown<=0){ sun+=15; sunCounter.textContent=sun; p.cooldown=300; }
+        if(["pea","double","ice","fire"].includes(p.type)&&p.cooldown<=0){ shoot(p.r,p.c,p.type);
+          if(p.type==="double") setTimeout(()=>shoot(p.r,p.c,"pea"),200); p.cooldown=80; } });
+
+      peas.forEach((pea,i)=>{ pea.x+=5; pea.el.style.left=pea.x+"px";
+        zombies.forEach((z,zi)=>{ if(pea.x>z.x&&pea.y>parseInt(z.el.style.top)&&pea.y<parseInt(z.el.style.top)+(z.isBoss?140:80)){
+            let dmg=1; if(pea.type==="fire") dmg=2; if(z.isBoss) dmg*=0.5; z.hp-=dmg; if(pea.type==="ice"&&!z.isBoss) z.slow=0.5;
+            pea.el.remove(); peas.splice(i,1); if(z.hp<=0){ z.el.remove(); zombies.splice(zi,1); if(z.isBoss) endGame(true); else {sun+=25; sunCounter.textContent=sun;} } }});
+        if(pea.x>game.clientWidth){ pea.el.remove(); peas.splice(i,1);} });
+
+      zombies.forEach(z=>{ z.x-=z.speed*z.slow; z.el.style.left=z.x+"px"; if(z.x<0) endGame(false); });
+      requestAnimationFrame(loop);
+    }
+
+    function shoot(r,c,type){ const pea=document.createElement("div");
+      pea.className="pea "+(type==="ice"?"ice":type==="fire"?"fire":"normal");
+      const rect=cells[r][c].getBoundingClientRect(),grect=game.getBoundingClientRect();
+      pea.style.top=`${rect.top-grect.top+30}px`; pea.style.left=`${rect.left-grect.left+40}px`; game.appendChild(pea);
+      peas.push({x:+pea.style.left.replace("px",""),y:+pea.style.top.replace("px",""),el:pea,type});
+    }
+
+    function endGame(win){ msg.classList.remove("hidden"); msg.textContent=win?"🎉 Vyhrál jsi (Hard Boss padl)!":"💀 Prohrál jsi!"; setTimeout(()=>location.reload(),5000); }
+
+    spawnWave(); setInterval(spawnWave,10000); loop();
+  </script>
+</body>
+</html>

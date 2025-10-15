@@ -2,22 +2,21 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Village War – 2 hráči</title>
+  <title>War of Villages – 2 hráči</title>
   <style>
     body { margin:0; background:#333; color:white; font-family:sans-serif; }
     #hud { display:flex; justify-content:space-between; padding:10px; background:#0008; font-size:18px; }
-    #panel { display:flex; justify-content:space-between; padding:10px; background:#111; }
-    .side { display:flex; flex-direction:column; gap:5px; }
+    #panel { display:flex; justify-content:space-between; padding:10px; background:#111; gap:10px; }
+    .side { display:flex; flex-direction:column; gap:6px; }
     .btn { padding:6px 12px; background:#444; border-radius:6px; cursor:pointer; font-size:14px; }
     .btn:hover { background:#666; }
     #game { position:relative; width:100%; height:600px; background:#2e7d32; overflow:hidden; }
-    .base { position:absolute; bottom:0; width:80px; height:120px; background:#795548; text-align:center; font-size:24px; }
-    .unit { position:absolute; bottom:0; width:40px; height:60px; text-align:center; line-height:60px; border-radius:5px; }
-    .p1 { background:blue; }
-    .p2 { background:red; }
+    .unit { position:absolute; bottom:0; width:40px; height:60px; text-align:center; line-height:60px; border-radius:6px; }
+    .p1 { background:blue; } .p2 { background:red; }
     .arrow { position:absolute; width:12px; height:4px; background:yellow; }
     .fireball { position:absolute; width:15px; height:15px; background:orange; border-radius:50%; }
     .rock { position:absolute; width:18px; height:18px; background:gray; border-radius:3px; }
+    .base { position:absolute; bottom:0; width:80px; height:120px; background:#795548; text-align:center; font-size:24px; }
     #message { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.7); font-size:48px; font-weight:bold; }
     #message.hidden { display:none; }
   </style>
@@ -29,132 +28,92 @@
   </div>
   <div id="panel">
     <div class="side">
-      <div class="btn" onclick="buyUnit(1,'warrior','attack')">P1 🪓 Útok (10)</div>
-      <div class="btn" onclick="buyUnit(1,'warrior','defend')">P1 🪓 Obrana (10)</div>
-      <div class="btn" onclick="buyUnit(1,'archer','attack')">P1 🏹 Útok (20)</div>
-      <div class="btn" onclick="buyUnit(1,'archer','defend')">P1 🏹 Obrana (20)</div>
-      <div class="btn" onclick="buyUnit(1,'tank','attack')">P1 🛡️ Útok (30)</div>
-      <div class="btn" onclick="buyUnit(1,'tank','defend')">P1 🛡️ Obrana (30)</div>
-      <div class="btn" onclick="buyUnit(1,'wizard','attack')">P1 🧙 Útok (40)</div>
-      <div class="btn" onclick="buyUnit(1,'wizard','defend')">P1 🧙 Obrana (40)</div>
-      <div class="btn" onclick="buyUnit(1,'catapult','attack')">P1 🪖 Útok (60)</div>
-      <div class="btn" onclick="buyUnit(1,'catapult','defend')">P1 🪖 Obrana (60)</div>
-      <div class="btn" onclick="buyUnit(1,'miner')">P1 ⛏️ Dělník (20)</div>
+      <div class="btn" onclick="buy(1,'warrior','attack')">P1 🪓 Útok (10)</div>
+      <div class="btn" onclick="buy(1,'warrior','defend')">P1 🪓 Obrana (10)</div>
+      <div class="btn" onclick="buy(1,'archer','attack')">P1 🏹 Útok (20)</div>
+      <div class="btn" onclick="buy(1,'archer','defend')">P1 🏹 Obrana (20)</div>
+      <div class="btn" onclick="buy(1,'tank','attack')">P1 🛡️ Útok (30)</div>
+      <div class="btn" onclick="buy(1,'tank','defend')">P1 🛡️ Obrana (30)</div>
+      <div class="btn" onclick="buy(1,'wizard','attack')">P1 🧙 Útok (40)</div>
+      <div class="btn" onclick="buy(1,'wizard','defend')">P1 🧙 Obrana (40)</div>
+      <div class="btn" onclick="buy(1,'catapult','attack')">P1 🪖 Útok (60)</div>
+      <div class="btn" onclick="buy(1,'catapult','defend')">P1 🪖 Obrana (60)</div>
+      <div class="btn" onclick="buy(1,'miner')">P1 ⛏️ Dělník (20)</div>
     </div>
     <div class="side">
-      <div class="btn" onclick="buyUnit(2,'warrior','attack')">P2 🪓 Útok (10)</div>
-      <div class="btn" onclick="buyUnit(2,'warrior','defend')">P2 🪓 Obrana (10)</div>
-      <div class="btn" onclick="buyUnit(2,'archer','attack')">P2 🏹 Útok (20)</div>
-      <div class="btn" onclick="buyUnit(2,'archer','defend')">P2 🏹 Obrana (20)</div>
-      <div class="btn" onclick="buyUnit(2,'tank','attack')">P2 🛡️ Útok (30)</div>
-      <div class="btn" onclick="buyUnit(2,'tank','defend')">P2 🛡️ Obrana (30)</div>
-      <div class="btn" onclick="buyUnit(2,'wizard','attack')">P2 🧙 Útok (40)</div>
-      <div class="btn" onclick="buyUnit(2,'wizard','defend')">P2 🧙 Obrana (40)</div>
-      <div class="btn" onclick="buyUnit(2,'catapult','attack')">P2 🪖 Útok (60)</div>
-      <div class="btn" onclick="buyUnit(2,'catapult','defend')">P2 🪖 Obrana (60)</div>
-      <div class="btn" onclick="buyUnit(2,'miner')">P2 ⛏️ Dělník (20)</div>
+      <div class="btn" onclick="buy(2,'warrior','attack')">P2 🪓 Útok (10)</div>
+      <div class="btn" onclick="buy(2,'warrior','defend')">P2 🪓 Obrana (10)</div>
+      <div class="btn" onclick="buy(2,'archer','attack')">P2 🏹 Útok (20)</div>
+      <div class="btn" onclick="buy(2,'archer','defend')">P2 🏹 Obrana (20)</div>
+      <div class="btn" onclick="buy(2,'tank','attack')">P2 🛡️ Útok (30)</div>
+      <div class="btn" onclick="buy(2,'tank','defend')">P2 🛡️ Obrana (30)</div>
+      <div class="btn" onclick="buy(2,'wizard','attack')">P2 🧙 Útok (40)</div>
+      <div class="btn" onclick="buy(2,'wizard','defend')">P2 🧙 Obrana (40)</div>
+      <div class="btn" onclick="buy(2,'catapult','attack')">P2 🪖 Útok (60)</div>
+      <div class="btn" onclick="buy(2,'catapult','defend')">P2 🪖 Obrana (60)</div>
+      <div class="btn" onclick="buy(2,'miner')">P2 ⛏️ Dělník (20)</div>
     </div>
   </div>
   <div id="game">
-    <div id="base1" class="base" style="left:0">🏠</div>
-    <div id="base2" class="base" style="right:0">🏠</div>
+    <div class="base" style="left:0">🏠</div>
+    <div class="base" style="right:0">🏠</div>
   </div>
   <div id="message" class="hidden"></div>
 
 <script>
-  const gold=[0,50,50];
-  const hp=[0,150,150];
+  const gold=[0,50,50], hp=[0,150,150];
   const goldEl=[null,document.getElementById("gold1"),document.getElementById("gold2")];
   const hpEl=[null,document.getElementById("hp1"),document.getElementById("hp2")];
-  const game=document.getElementById("game");
-  const msg=document.getElementById("message");
-
-  let units=[], projectiles=[];
-
-  const stats={
-    warrior:{hp:10,dmg:2,speed:1,range:0,cost:10,type:"melee"},
+  const game=document.getElementById("game"); const msg=document.getElementById("message");
+  let units=[],projectiles=[];
+  const stats={ warrior:{hp:10,dmg:2,speed:1,range:0,cost:10,type:"melee"},
     archer:{hp:6,dmg:2,speed:1,range:250,cost:20,type:"arrow"},
     tank:{hp:25,dmg:4,speed:0.5,range:0,cost:30,type:"melee"},
     wizard:{hp:12,dmg:3,speed:0.8,range:220,cost:40,type:"fireball"},
     catapult:{hp:30,dmg:6,speed:0.4,range:400,cost:60,type:"rock"},
-    miner:{hp:5,dmg:0,speed:0,range:0,cost:20,type:"miner"}
-  };
-
-  function buyUnit(player,type,mode){
-    const s=stats[type];
-    if(gold[player]<s.cost) return;
-    gold[player]-=s.cost;
-    goldEl[player].textContent=gold[player];
-    spawnUnit(player,type,mode);
-  }
-
-  function spawnUnit(player,type,mode){
-    const u=document.createElement("div");
-    u.className="unit "+(player===1?"p1":"p2");
-    u.textContent=getEmoji(type);
-    game.appendChild(u);
-    units.push({
-      el:u,type,hp:stats[type].hp,dmg:stats[type].dmg,speed:stats[type].speed,
-      range:stats[type].range,player,mode,
-      x:player===1?100:game.clientWidth-140
-    });
-  }
-
-  function getEmoji(t){ return {warrior:"🪓",archer:"🏹",tank:"🛡️",wizard:"🧙",catapult:"🪖",miner:"⛏️"}[t]||"?"; }
+    miner:{hp:5,dmg:0,speed:0,range:0,cost:20,type:"miner"} };
 
   setInterval(()=>{ gold[1]+=3; gold[2]+=3; goldEl[1].textContent=gold[1]; goldEl[2].textContent=gold[2]; },2000);
+
+  function buy(p,t,mode){ const s=stats[t]; if(gold[p]<s.cost) return; gold[p]-=s.cost; goldEl[p].textContent=gold[p];
+    const u=document.createElement("div"); u.className="unit "+(p===1?"p1":"p2"); u.textContent=({warrior:"🪓",archer:"🏹",tank:"🛡️",wizard:"🧙",catapult:"🪖",miner:"⛏️"})[t];
+    game.appendChild(u); units.push({el:u,type:t,hp:s.hp,dmg:s.dmg,speed:s.speed,range:s.range,player:p,mode,x:p===1?110:game.clientWidth-150}); }
 
   function loop(){
     units.forEach((u,i)=>{
       if(u.hp<=0){ u.el.remove(); units.splice(i,1); return; }
 
-      if(u.type==="miner"){
-        if(!u.cooldown||u.cooldown<=0){ gold[u.player]+=5; goldEl[u.player].textContent=gold[u.player]; u.cooldown=180; }
-        else u.cooldown--; return;
-      }
+      if(u.type==="miner"){ if(!u.cooldown||u.cooldown<=0){ gold[u.player]+=5; goldEl[u.player].textContent=gold[u.player]; u.cooldown=180; } else u.cooldown--;
+        u.x=u.player===1?120:game.clientWidth-160; u.el.style.left=u.x+"px"; return; }
 
-      if(u.mode==="attack") u.x+=(u.player===1?1:-1)*u.speed;
-      else if(u.mode==="defend"){ u.x=u.player===1?120:game.clientWidth-160; }
-
+      if(u.mode==="attack"){ u.x+=(u.player===1?1:-1)*u.speed; } else { u.x=u.player===1?140:game.clientWidth-180; }
       u.el.style.left=u.x+"px";
 
       const enemy=units.find(e=>e.player!==u.player && Math.abs(e.x-u.x)<(u.range>0?u.range:40));
-      if(enemy){
-        if(u.range>0){ if(Math.random()<0.02) shoot(u); }
-        else{ enemy.hp-=u.dmg*0.1; }
-      } else {
-        if(u.player===1 && u.x>game.clientWidth-120){
-          hp[2]-=u.dmg*0.2; hpEl[2].textContent=Math.floor(hp[2]); if(hp[2]<=0) endGame(1);
-        }
-        if(u.player===2 && u.x<120){
-          hp[1]-=u.dmg*0.2; hpEl[1].textContent=Math.floor(hp[1]); if(hp[1]<=0) endGame(2);
-        }
+      if(enemy){ if(u.range>0){ if(Math.random()<0.02) shoot(u); } else { enemy.hp-=u.dmg*0.1; } }
+      else{
+        if(u.player===1 && u.x>game.clientWidth-120){ hp[2]-=u.dmg*0.2; hpEl[2].textContent=Math.floor(hp[2]); if(hp[2]<=0) end(1); }
+        if(u.player===2 && u.x<120){ hp[1]-=u.dmg*0.2; hpEl[1].textContent=Math.floor(hp[1]); if(hp[1]<=0) end(2); }
       }
     });
 
-    projectiles.forEach((p,i)=>{
-      p.x+=p.dir*4; p.el.style.left=p.x+"px";
+    projectiles.forEach((p,i)=>{ p.x+=p.dir*4; p.el.style.left=p.x+"px";
       const hit=units.find(u=>u.player!==p.player && Math.abs(u.x-p.x)<20);
-      if(hit){ hit.hp-=p.dmg; if(p.type==="fireball"||p.type==="rock"){ units.forEach(u2=>{ if(u2.player!==p.player && Math.abs(u2.x-p.x)<50) u2.hp-=p.dmg*0.5; }); } p.el.remove(); projectiles.splice(i,1); }
-      if(p.x<0||p.x>game.clientWidth){ p.el.remove(); projectiles.splice(i,1); }
-    });
+      if(hit){ hit.hp-=p.dmg; if(p.type==="fireball"||p.type==="rock"){ units.forEach(u2=>{ if(u2.player!==p.player && Math.abs(u2.x-p.x)<50) u2.hp-=p.dmg*0.5; }); }
+        p.el.remove(); projectiles.splice(i,1); }
+      if(p.x<0||p.x>game.clientWidth){ p.el.remove(); projectiles.splice(i,1); } });
 
     requestAnimationFrame(loop);
   }
 
-  function shoot(u){
-    const p=document.createElement("div");
-    let cls="arrow"; if(u.type==="fireball") cls="fireball"; if(u.type==="rock") cls="rock";
+  function shoot(u){ const p=document.createElement("div"); let cls="arrow"; if(u.type==="fireball") cls="fireball"; if(u.type==="rock") cls="rock";
     p.className=cls; p.style.bottom="80px"; p.style.left=u.x+"px"; game.appendChild(p);
-    projectiles.push({el:p,x:u.x,dir:u.player===1?1:-1,dmg:u.dmg,player:u.player,type:u.type});
-  }
+    projectiles.push({el:p,x:u.x,dir:u.player===1?1:-1,dmg:u.dmg,player:u.player,type:u.type}); }
 
-  function endGame(winner){
-    msg.classList.remove("hidden");
-    msg.textContent=winner===1?"🎉 Vyhrál hráč 1!":"🎉 Vyhrál hráč 2!";
-  }
+  function end(w){ msg.classList.remove("hidden"); msg.textContent=w===1?"🎉 Vyhrál hráč 1!":"🎉 Vyhrál hráč 2!"; setTimeout(()=>location.reload(),4500); }
 
   loop();
 </script>
 </body>
 </html>
+
